@@ -122,8 +122,8 @@ def validate_args(args):
 
 # -----------------------------------------------------------------------------
 # 모델 경로 처리
-# 여기서는 Stable-Baselines3 모델 파일을 불러오거나 저장할 때 필요한 경로 처리를 수행합니다. 
-# .zip 확장자를 생략해도 기존 모델을 찾을 수 있도록 처리합니다.
+# Stable-Baselines3 모델 파일을 불러오거나 저장할 때 필요한 경로 처리를 수행합니다. 
+# .zip 확장자를 생략해도 기존 모델을 찾을 수 있도록 처리했습니다.
 # -----------------------------------------------------------------------------
 
 def resolve_existing_model_path(model_path):
@@ -259,9 +259,9 @@ def create_or_load_model(args, env):
 
 # -----------------------------------------------------------------------------
 # Eval-only 실행
-# 이 부분에서는 학습된 PPO policy를 고정한 상태로 deterministic evaluation을 수행하도록 정의해뒀습니다.
+# 학습된 PPO policy를 고정한 상태로 deterministic evaluation을 수행하도록 정의해뒀습니다.
 # 이 mode에서는 PPO 가중치가 업데이트되지 않습니다.
-# 단, QosRewardWrapper는 그대로 적용되므로 eval-only 결과는 fixed PPO policy + action projection이 적용된 Hybrid RL-TCP 결과입니다.
+# 이 경우에 QosRewardWrapper는 그대로 적용되므로 eval-only 결과는 fixed PPO policy + action projection이 적용된 Hybrid RL-TCP 결과입니다.
 # -----------------------------------------------------------------------------
 
 def run_evaluation(model, env, total_timesteps):
@@ -296,7 +296,7 @@ def run_evaluation(model, env, total_timesteps):
 
 # -----------------------------------------------------------------------------
 # PPO 학습 실행
-# 이 부분에서는 PPO learning을 수행하고 학습된 model을 지정된 save-path에 저장합니다.
+# PPO learning을 수행하고 학습된 model을 지정된 save-path에 저장합니다.
 # multi-topology sequential training에서는 첫 topology에서 fresh-train을 수행하고, 이후 topology에서는 continue-train으로 같은 모델을 이어서 학습합니다.
 # -----------------------------------------------------------------------------
 
