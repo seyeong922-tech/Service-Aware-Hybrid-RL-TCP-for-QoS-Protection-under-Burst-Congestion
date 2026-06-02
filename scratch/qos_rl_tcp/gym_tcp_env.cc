@@ -10,8 +10,7 @@ NS_LOG_COMPONENT_DEFINE("GymTcpEnv");
 
 // -----------------------------------------------------------------------------
 // 내부 상수 및 observation/action 구조 정의
-// 우선 TCP 제어에 사용하는 MSS, agent 수, agent별 feature 수, observation layout, action layout을 정의합니다.
-//
+// TCP 제어에 사용하는 MSS, agent 수, agent별 feature 수, observation layout, action layout을 아래처럼 정의합니다.
 // Observation layout:
 //   S1 FTP:
 //     [0] currentCwnd
@@ -20,7 +19,6 @@ NS_LOG_COMPONENT_DEFINE("GymTcpEnv");
 //     [3] bytesReceived
 //     [4] segmentLossCount
 //     [5] serviceType
-//
 //   S2 Video:
 //     [6]  currentCwnd
 //     [7]  currentRtt
@@ -28,10 +26,7 @@ NS_LOG_COMPONENT_DEFINE("GymTcpEnv");
 //     [9]  bytesReceived
 //     [10] segmentLossCount
 //     [11] serviceType
-//
-// Action layout:
-//   global_action = s1_action + 3 * s2_action
-//
+// Action layout: global_action = s1_action + 3 * s2_action
 // Agent action:
 //   0 = cwnd half
 //   1 = hold
@@ -83,8 +78,7 @@ bool GymTcpEnv::HasAgent(uint32_t flowId) const
 // TCP agent 등록
 // topology 파일에서 찾은 TCP socket을 flowId/serviceType과 함께 등록합니다.
 // 등록된 socket에는 CWND와 RTT tracer를 연결하여 이후 observation 구성에 사용합니다.
-//
-// 현재 실험에서는:
+// 실험한 환경에서는:
 //   flowId 1 = S1 FTP/background
 //   flowId 2 = S2 primary video-like
 // -----------------------------------------------------------------------------
@@ -197,10 +191,7 @@ Ptr<OpenGymSpace> GymTcpEnv::GetActionSpace()
 // -----------------------------------------------------------------------------
 // Flow별 observation 추가
 // 여기서는 특정 flowId에 해당하는 agent 상태를 OpenGymBoxContainer에 추가합니다.
-//
-// 추가되는 feature 순서는:
-//   currentCwnd, currentRtt, rttRatio, bytesReceived, segmentLossCount, serviceType
-//
+// 추가되는 feature 순서는 currentCwnd, currentRtt, rttRatio, bytesReceived, segmentLossCount, serviceType순
 // agent가 아직 등록되지 않은 초기 구간에는 zero padding을 넣어 observation 크기를 항상 12차원으로 유지합니다.
 // -----------------------------------------------------------------------------
 
@@ -271,13 +262,11 @@ Ptr<OpenGymDataContainer> GymTcpEnv::GetObservation()
 
 // -----------------------------------------------------------------------------
 // 개별 flow action 적용
-// 여기서는 특정 flowId에 대해 Python agent가 선택한 최종 action을 TCP CWND에 반영합니다.
-//
+// 특정 flowId에 대해 Python agent가 선택한 최종 action을 TCP CWND에 반영합니다.
 // agentAction:
 //   0 = CWND를 절반으로 감소, 단 MSS_BYTES보다 작아지지 않음
 //   1 = 현재 CWND 유지
 //   2 = CWND를 MSS_BYTES만큼 증가
-//
 // action projection은 Python의 QosRewardWrapper에서 먼저 수행되며, 이 함수는 projection 이후의 action을 실제 socket에 적용합니다.
 // -----------------------------------------------------------------------------
 
@@ -316,7 +305,6 @@ void GymTcpEnv::ApplyAgentAction(uint32_t flowId, uint32_t agentAction)
 // -----------------------------------------------------------------------------
 // Joint action 실행
 // 여기서는 Python에서 전달된 0~8 범위의 global action을 S1/S2 action으로 분해하고, 각 flow에 대한 CWND 조정을 적용합니다.
-//
 // globalAction = s1Action + 3 * s2Action
 // -----------------------------------------------------------------------------
 
@@ -355,7 +343,7 @@ float GymTcpEnv::GetReward()
 
 // -----------------------------------------------------------------------------
 // Episode 종료 조건
-// ns-3 simulation time이 설정된 m_simulationTime에 도달하면 game over로 판정합니다.
+// ns-3 simulation time이 설정된 m_simulationTime에 도달하면 종료로 판정합니다.
 // -----------------------------------------------------------------------------
 
 bool GymTcpEnv::GetGameOver()
