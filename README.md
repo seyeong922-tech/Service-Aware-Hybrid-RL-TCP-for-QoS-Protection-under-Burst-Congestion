@@ -1,4 +1,4 @@
-# Service-Aware Hybrid RL-TCP for QoS-Protection under Burst-Congestion
+# Service-Aware Hybrid RL-TCP for QoS Protection under Burst Congestion
 
 이번 종합설계에서 사용한 `ns-3` / `ns3-gym` 기반 Hybrid RL-TCP 실험 코드입니다.
 
