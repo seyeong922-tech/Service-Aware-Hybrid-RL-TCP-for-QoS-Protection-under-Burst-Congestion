@@ -9,15 +9,10 @@ import matplotlib.pyplot as plt
 # -----------------------------------------------------------------------------
 # 기본 경로 및 QoS 기준 정의
 # 결과 파일을 읽을 기본 경로와 분석에 사용할 QoS threshold를 정의합니다.
-#
 # MIN_GP: S2 primary video-like flow의 최소 goodput 기준
-#
 # TARGET_GP: S2가 안정적이라고 볼 수 있는 목표 goodput 기준
-#
 # RTT_LIMIT: S2 delay constraint로 사용하는 TCP RTT 기준
-#
 # STEADY_START: TCP slow start 및 초기 연결 구간을 제외하기 위한 분석 시작 시점
-#
 # BURST_START / BURST_END: S3 burst traffic이 유입되는 기본 구간
 # -----------------------------------------------------------------------------
 
@@ -37,7 +32,7 @@ BURST_END = 100.0
 # -----------------------------------------------------------------------------
 # 실행 인자 정의
 # 분석할 결과 디렉토리, 저장할 figure 이름, figure title을 command-line option으로 받습니다.
-# ex) python3 scratch/plot.py --data-dir scratch/results/topo3_rtt
+# 예시로 python3 scratch/plot.py --data-dir scratch/results/topo3_rtt
 # -----------------------------------------------------------------------------
 
 def parse_args():
@@ -96,13 +91,10 @@ def resolve_paths(args):
 # -----------------------------------------------------------------------------
 # 시계열 로그 파일 로드
 # topology 실행 결과로 생성된 txt 파일을 읽고, steady_start 이후 데이터만 반환합니다.
-#
-# 입력 파일 형식:
-#   time value
-# 예:
+# 입력 파일 형식: time value
+# 예시로
 #   baseline_goodput_s2.txt
 #   rl_rtt_s2.txt
-#
 # 파일이 없거나 형식이 잘못된 경우 None을 반환하여 이후 require_data()에서 중단
 # -----------------------------------------------------------------------------
 
@@ -460,12 +452,10 @@ def plot_qos_compliance_bar(ax, baseline_metrics, rl_metrics):
 # -----------------------------------------------------------------------------
 # Main 분석 흐름
 # 결과 파일을 로드하고, S2 metric을 계산한 뒤, figure와 터미널 summary를 생성합니다.
-#
 # 출력 figure:
 # - S2 goodput time-series
 # - S2 RTT CDF
 # - S2 QoS compliance bar
-#
 # 터미널 summary:
 # - Baseline Cubic S2 QoS
 # - Proposed RL S2 QoS
