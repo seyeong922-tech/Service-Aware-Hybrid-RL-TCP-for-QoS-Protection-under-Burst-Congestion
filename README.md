@@ -379,7 +379,7 @@ scratch/results/topo3_rtt/topo3_stable_report.png
 Parking-lot, single-burst 환경에서 S2 flow의 goodput, RTT, QoS compliance를 비교해본 결과 다음과 같은 출력 그래프를 확인할 수 있었습니다. <br /> <br />
 <img width="4800" height="3000" alt="parkinglot" src="https://github.com/user-attachments/assets/75b4d9fa-ec92-413a-b582-f8976fa81ff5" />
 
-최종 보고서에서는 단일 실행 결과에서 더 나아가서 5개 seed 평균을 중심으로 아래처럼 결과를 정리했습니다.
+최종 보고서에서는 위와 같은 단일 실행 결과에서 나아가, 5개 seed 평균을 중심으로 결과를 정리했습니다.
 
 위와 동일한 환경에서 제안된 모델(Full RL)은 S2 burst 구간의 5 Mbps 이상 goodput compliance를 TCP Cubic baseline 대비 개선했습니다.
 
