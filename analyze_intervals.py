@@ -31,10 +31,7 @@ DEFAULT_SCENARIO = "burst"
 # -----------------------------------------------------------------------------
 # 실행 인자 정의
 # 분석할 결과 디렉토리와 분석 구간을 command-line option으로 받습니다.
-# 예시로,
-#   python3 scratch/analyze_intervals.py --data-dir scratch/results/topo3_rtt
-#   python3 scratch/analyze_intervals.py --data-dir scratch/results/parkinglot_stress_rtt --start 50 --end 70
-# --start와 --end를 지정하면 --scenario의 기본 구간보다 우선 적용됩니다.
+# 예시: python3 scratch/analyze_intervals.py --data-dir scratch/results/topo3_rtt
 # -----------------------------------------------------------------------------
 
 def parse_args():
@@ -90,16 +87,8 @@ def resolve_data_dir(args):
 # -----------------------------------------------------------------------------
 # 시계열 로그 파일 로드
 # topology 실행 결과로 생성된 txt 파일을 읽어 time/value 배열로 반환합니다.
-#
-# 입력 파일 형식:
-#   time value
-#
-# 예:
-#   baseline_goodput_s1.txt
-#   rl_rtt_s2.txt
-#
-# 분석에 필요한 파일이 없거나 형식이 잘못된 경우에는 예외를 발생시켜
-# 잘못된 표가 출력되지 않도록 합니다.
+# 예시: baseline_goodput_s1.txt 나 rl_rtt_s2.txt
+# 분석에 필요한 파일이 없거나 형식이 잘못된 경우에는 예외를 발생시켜 잘못된 표가 출력되지 않도록 합니다.
 # -----------------------------------------------------------------------------
 
 def load_series(data_dir, filename):
@@ -129,9 +118,7 @@ def load_series(data_dir, filename):
 # -----------------------------------------------------------------------------
 # 분석 구간 선택
 # time 배열과 value 배열에서 [start, end) 구간에 해당하는 값만 추출합니다.
-#
-# end를 포함하지 않는 half-open interval을 사용해 인접 구간 분석 시
-# 같은 sample이 중복 집계되는 것을 피합니다.
+# end를 포함하지 않는 half-open interval을 사용해 인접 구간 분석 시 같은 sample이 중복 집계되는 것을 피합니다.
 # -----------------------------------------------------------------------------
 
 def select_interval(t, y, start, end):
@@ -145,7 +132,7 @@ def select_interval(t, y, start, end):
 # -----------------------------------------------------------------------------
 # 안전한 통계 계산 함수
 # 선택된 구간에 sample이 없는 경우 NaN을 반환합니다.
-# 이렇게 하면 빈 구간으로 인해 분석 스크립트가 중단되는 것을 방지할 수 있습니다.
+# 이렇게 해서 빈 구간으로 인해 분석 스크립트가 중단되는 것을 방지합니다.
 # -----------------------------------------------------------------------------
 
 def mean_or_nan(values):
@@ -179,8 +166,7 @@ def percentile_or_nan(values, percentile):
 # QoS ratio 계산 함수
 # ratio_ge는 특정 threshold 이상인 sample 비율을 계산합니다.
 # ratio_le는 특정 threshold 이하인 sample 비율을 계산합니다.
-#
-# 현재 사용 기준:
+# 현재 사용한 기준은
 #   S1 survival: S1 goodput >= 1Mbps
 #   S2 QoS:      S2 goodput >= 5Mbps
 #   S2 RTT OK:   S2 RTT <= 120ms
@@ -207,11 +193,8 @@ def ratio_le(values, threshold):
 # -----------------------------------------------------------------------------
 # Jain fairness index 계산
 # S1/S2 평균 throughput을 기준으로 fairness index를 계산합니다.
-#
-# 주의:
-# 이 값은 flow 간 균등성을 보는 보조 지표입니다.
-# 본 프로젝트의 핵심 목표는 모든 flow의 균등 처리량 극대화가 아니라,
-# S2 primary video-like flow의 QoS compliance 우선 보호입니다.
+# 여기서는 flow간 균등성을 보는데, 프로젝트의 목표는 모든 flow의 처리량을 균등하게 극대화하는 것이 아니라 
+# S2 primary video-like flow의 QoS compliance를 우선 보호하는 것이기에 tcp cubic 대비 낮아지는 지표입니다.
 # -----------------------------------------------------------------------------
 
 def jain_fairness(values):
@@ -230,10 +213,8 @@ def jain_fairness(values):
 
 # -----------------------------------------------------------------------------
 # Prefix별 metric 수집
-# baseline 또는 rl prefix에 해당하는 S1/S2 goodput, RTT 파일을 읽고,
-# 지정된 interval에서 주요 성능 지표를 계산합니다.
-#
-# 주요 출력 metric:
+# baseline 또는 rl prefix에 해당하는 S1/S2 goodput, RTT 파일을 읽고, 지정된 interval에서 주요 성능 지표를 계산합니다.
+# 출력 metric은
 # - S1/S2 mean throughput
 # - S1/S2 mean RTT
 # - Jain fairness index
@@ -291,9 +272,7 @@ def fmt(value, digits=2):
 
 # -----------------------------------------------------------------------------
 # 주요 성능 비교표 출력
-# 지정된 scenario interval에서 S1/S2 throughput, S1/S2 delay, Jain fairness를
-# Baseline Cubic과 Proposed RL로 나누어 출력합니다.
-#
+# 지정된 scenario interval에서 S1/S2 throughput, S1/S2 delay, Jain fairness를 Baseline Cubic과 Proposed RL로 나누어 출력합니다.
 # Delay는 one-way delay가 아니라 TCP RTT입니다.
 # -----------------------------------------------------------------------------
 
@@ -334,11 +313,8 @@ def print_main_table(scenario_label, start, end, data_dir, base, rl):
 
 # -----------------------------------------------------------------------------
 # QoS 및 안정성 세부표 출력
-# S2 primary video-like flow의 5Mbps compliance, 120ms RTT constraint,
-# S1 FTP survival ratio, median throughput, p95 delay를 출력합니다.
-#
-# 이 표는 "S2를 얼마나 보호했는가"와 "S1이 완전히 starvation되지 않았는가"를
-# 함께 확인하기 위한 보조 분석입니다.
+# S2 primary video-like flow의 5Mbps compliance, 120ms RTT constraint, S1 FTP survival ratio, median throughput, p95 delay를 출력합니다.
+# S2를 얼마나 보호했는지와 S1이 완전히 끊기지 않았는가를 함께 보기 위한 보조 용도입니다.
 # -----------------------------------------------------------------------------
 
 def print_qos_table(base, rl):
@@ -383,11 +359,9 @@ def print_qos_table(base, rl):
 
 # -----------------------------------------------------------------------------
 # Main 분석 흐름
-# command-line 인자를 해석해 분석 구간을 결정하고, baseline/RL 결과를 읽어
-# 주요 성능 비교표와 QoS 세부표를 출력합니다.
-#
-# 기본적으로는 50~100초 burst 구간을 분석합니다.
-# parking-lot stress처럼 구간을 나누어 보고 싶을 때는 --start, --end를 사용합니다.
+# 분석 구간을 결정하고, baseline/RL 결과를 읽어 주요 성능 비교표와 QoS 세부표를 출력합니다.
+# 기본적으로는 50~100초 burst 구간을 분석하게 됩니다.
+# parking-lot stress처럼 구간을 나누어 보고 싶을 때는 --start, --end를 사용하면 됩니다.
 # -----------------------------------------------------------------------------
 
 def main():
