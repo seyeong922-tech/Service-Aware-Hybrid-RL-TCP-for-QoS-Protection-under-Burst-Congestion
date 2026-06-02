@@ -237,14 +237,10 @@ void PlotRtt2(Time oldVal, Time newVal)
 // -----------------------------------------------------------------------------
 // TCP trace 연결
 // NodeList index를 기준으로 S1/S2 TCP socket의 CWND와 RTT tracer를 연결합니다.
-//
 // NodeList ordering:
 //   NodeList/0 = S1
 //   NodeList/1 = S2
 //   NodeList/2 = S3
-//
-// 주의:
-// topology node 생성 순서가 바뀌면 이 경로도 함께 검토해야 합니다.
 // -----------------------------------------------------------------------------
 
 void ConnectTcpTracers()
@@ -269,12 +265,9 @@ void ConnectTcpTracers()
 
 // -----------------------------------------------------------------------------
 // Shared uplink queue drop tracer 연결
-// star-like gateway 구조에서 핵심 bottleneck인 Gateway->ISP/Core 방향 queue의 drop event를 GymTcpEnv에 연결합니다.
-//
-// Traffic direction:
-//   S1/S2/S3 -> AP -> Gateway -> ISP/Core -> D1/D2/D3
-//
-// 따라서 congested output queue는 dGwIsp.Get(0), 즉 Gateway -> ISP/Core 방향입니다.
+// star-like gateway 구조에서 bottleneck인 Gateway->ISP/Core 방향 queue의 drop event를 GymTcpEnv에 연결합니다.
+// Traffic direction: S1/S2/S3 -> AP -> Gateway -> ISP/Core -> D1/D2/D3
+// 그렇기에 congested output queue는 dGwIsp.Get(0), 다시 말해 Gateway -> ISP/Core 방향입니다.
 // -----------------------------------------------------------------------------
 
 void ConnectQueueDropTracer(Ptr<GymTcpEnv> env, const NetDeviceContainer &dGwIsp)
@@ -296,7 +289,7 @@ void ConnectQueueDropTracer(Ptr<GymTcpEnv> env, const NetDeviceContainer &dGwIsp
 
 // -----------------------------------------------------------------------------
 // RL agent socket 등록 1회 시도
-// 특정 node의 TCP socket을 찾아 GymTcpEnv에 flowId/serviceType과 함께 등록합니다.
+// 특정 node의 TCP socket을 찾아 GymTcpEnv에 flowId/serviceType과 함께 등록합니다. 
 // socket이 아직 생성되지 않은 경우 false를 반환합니다.
 // -----------------------------------------------------------------------------
 
@@ -335,8 +328,7 @@ bool TryRegisterAgentOnce(
 
 // -----------------------------------------------------------------------------
 // RL agent socket 등록 재시도
-// application start 직후 TCP socket이 아직 생성되지 않았을 수 있으므로,
-// 일정 시간까지 0.2초 간격으로 socket 등록을 재시도합니다.
+// application start 직후 TCP socket이 아직 생성되지 않았을 수 있으니 일정 시간까지 0.2초 간격으로 socket 등록을 재시도합니다.
 // -----------------------------------------------------------------------------
 
 void TryRegisterAgentWithRetry(
@@ -375,20 +367,16 @@ void TryRegisterAgentWithRetry(
 
 // -----------------------------------------------------------------------------
 // Main simulation entry point
-// mode 인자를 받아 Baseline 또는 RL simulation을 실행합니다.
-//
+// mode 정보를 받아 Baseline 또는 RL simulation을 실행합니다.
 // Baseline mode:
 //   - TCP Cubic만 사용
 //   - Gym interface 연결 없음
 //   - baseline_*.txt 로그 생성
-//
 // RL mode:
 //   - TCP Cubic 기반 socket에서 시작
 //   - S1/S2 TCP socket을 GymTcpEnv에 등록
 //   - Python PPO agent가 S1/S2 CWND를 보조 제어
 //   - rl_*.txt 로그 생성
-//
-// 이 topology는 training에 포함하지 않고, parking-lot + dumbbell에서 학습한 general model을 eval-only로 적용하는 unseen evaluation scenario입니다.
 // -----------------------------------------------------------------------------
 
 int main(int argc, char *argv[])
@@ -410,11 +398,9 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------------------------
     // Node 생성
     // source node 3개, gateway 계층 node 3개, destination node 3개를 생성합니다.
-    //
     // S.Get(0) = S1 FTP/background
     // S.Get(1) = S2 primary video-like
     // S.Get(2) = S3 other-user burst traffic
-    //
     // G.Get(0) = AP
     // G.Get(1) = Gateway
     // G.Get(2) = ISP/Core
@@ -435,10 +421,8 @@ int main(int argc, char *argv[])
 
     // -------------------------------------------------------------------------
     // Link helper 설정
-    // 사용자별 local access delay를 다르게 주어 shared gateway 환경의 heterogeneous device/user 특성을 단순화합니다.
-    //
-    // 단, 실제 Wi-Fi PHY/MAC을 모델링한 것은 아니며,
-    // 여러 사용자가 AP/Gateway와 ISP uplink를 공유하는 상황을 wired point-to-point link로 단순화한 abstraction입니다.
+    // 사용자별 local access delay를 다르게 줘서 shared gateway 환경의 heterogeneous device/user 특성을 단순화합니다.
+    // 실제 Wi-Fi PHY/MAC을 모델링하지는 못했고, 여러 사용자가 AP/Gateway와 ISP uplink를 공유하는 상황을 wired point-to-point link로 단순화해서 나타내본 abstraction입니다.
     // -------------------------------------------------------------------------
 
     PointToPointHelper accessS1;
@@ -469,7 +453,7 @@ int main(int argc, char *argv[])
 
 
     // -------------------------------------------------------------------------
-    // Star-like shared gateway topology 구성
+    // Star-like shared gateway topology 구성 [참고용 figure***]
     //
     // S1 FTP/background ─┐
     // S2 primary video  ─┼── AP -- Gateway ===== ISP/Core ─┬── D1
@@ -477,11 +461,6 @@ int main(int argc, char *argv[])
     //                                                       └── D3
     //
     // Gateway->ISP/Core는 여러 사용자가 공유하는 uplink bottleneck입니다.
-    //
-    // 실생활 해석:
-    // - S1: 온라인 면접/실시간 강의 중 필요한 파일 다운로드 또는 background FTP
-    // - S2: 온라인 면접, 실시간 강의, primary video-like service
-    // - S3: 같은 기숙사/도서관 네트워크의 다른 사용자 burst traffic
     // -------------------------------------------------------------------------
 
     NetDeviceContainer dS1Ap = accessS1.Install(S.Get(0), ap);
@@ -557,9 +536,7 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------------------------
     // S1 FTP/background traffic 생성
     // S1은 항상 전송되는 best-effort 또는 보조 traffic입니다.
-    // 예: 실시간 강의/온라인 면접 중 필요한 파일 다운로드, 자료 다운로드 등.
-    //
-    // RL mode에서는 S1도 제어 대상이지만, starvation은 피해야 합니다.
+    // RL mode에서는 S1도 제어 대상이지만, 완전히 끊기지는 않도록 조정하게 됩니다.
     // -------------------------------------------------------------------------
 
     BulkSendHelper src1(
@@ -574,11 +551,7 @@ int main(int argc, char *argv[])
 
 
     // -------------------------------------------------------------------------
-    // S2 primary video-like traffic 생성
-    // S2는 보호 대상 flow입니다.
-    // 예: 온라인 면접, 실시간 강의, 화상회의, video-like service.
-    //
-    // 본 프로젝트의 핵심 QoS 목표는 S2가 burst 구간에서도 5Mbps goodput과 120ms RTT constraint를 최대한 만족하도록 하는 것입니다.
+    // S2 primary video-like traffic 생성 (S2 보호가 목적)
     // -------------------------------------------------------------------------
 
     BulkSendHelper src2(
@@ -594,9 +567,7 @@ int main(int argc, char *argv[])
 
     // -------------------------------------------------------------------------
     // S3 other-user burst traffic 생성
-    // S3는 50~100초에만 유입되는 다른 사용자 burst traffic이며, RL 제어 대상이 아닙니다.
-    //
-    // 예: 같은 기숙사/도서관 네트워크의 다른 사용자가 대용량 다운로드, 게임 패치, 클라우드 동기화 등을 시작하는 상황.
+    // S3는 50~100초에만 유입되는 다른 사용자 burst traffic이고 RL 제어 대상으로 두지 않습니다
     // -------------------------------------------------------------------------
 
     BulkSendHelper src3(
@@ -623,11 +594,9 @@ int main(int argc, char *argv[])
 
     // -------------------------------------------------------------------------
     // RL mode 설정
-    // RL mode에서는 S1/S2 TCP socket을 GymTcpEnv에 등록하고,
-    // OpenGymInterface를 통해 Python PPO agent와 연결합니다.
-    //
-    // S3 burst traffic은 외부 혼잡 요인이므로 agent로 등록하지 않습니다.
-    // 이 topology에서는 학습하지 않고, 기존 general model을 eval-only로 적용합니다.
+    // RL mode에서는 S1/S2 TCP socket을 GymTcpEnv에 등록하고, OpenGymInterface를 통해 Python PPO agent와 연결합니다.
+    // S3 burst traffic은 외부 traffic으로 보고, 제어하는 요소가 아니기에 agent로 등록하지 않습니다.
+    // 최종 결과 출력에는 eval-only를 사용했기에 사용되지 않은 부분입니다.
     // -------------------------------------------------------------------------
 
     if (mode == "RL")
