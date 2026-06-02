@@ -233,15 +233,12 @@ void PlotRtt2(Time oldVal, Time newVal)
 
 // -----------------------------------------------------------------------------
 // TCP trace 연결
-// 여기서는 NodeList index를 기준으로 S1/S2 TCP socket의 CWND와 RTT tracer를 연결합니다.
-//
+// NodeList index를 기준으로 S1/S2 TCP socket의 CWND와 RTT tracer를 연결합니다.
 // NodeList ordering:
 //   NodeList/0 = S1
 //   NodeList/1 = S2
 //   NodeList/2 = S3
-//
-// **For later uses - 수정이 필요할 때:
-// topology node 생성 순서가 바뀌면 이 경로 검토하기
+// **For later uses - topology node 생성 순서가 바뀌면 여기 경로 검토하기
 // -----------------------------------------------------------------------------
 
 void ConnectTcpTracers()
@@ -327,8 +324,7 @@ bool TryRegisterAgentOnce(
 
 // -----------------------------------------------------------------------------
 // RL agent socket 등록 재시도
-// application start 직후 TCP socket이 아직 생성되지 않았을 수 있으므로,
-// 일정 시간까지 0.2초 간격으로 socket 등록을 재시도합니다.
+// application start 직후 TCP socket이 아직 생성되지 않았을 수 있기에 일정 시간동안 0.2초 간격으로 socket 등록을 재시도하게끔 합니다.
 // -----------------------------------------------------------------------------
 
 void TryRegisterAgentWithRetry(
@@ -367,13 +363,11 @@ void TryRegisterAgentWithRetry(
 
 // -----------------------------------------------------------------------------
 // Main simulation entry point
-// mode 인자를 받아 Baseline 또는 RL simulation을 실행합니다.
-//
+// mode 정보를 받아 Baseline 또는 RL simulation을 실행합니다.
 // Baseline mode:
 //   - TCP Cubic만 사용
 //   - Gym interface 연결 없음
 //   - baseline_*.txt 로그 생성
-//
 // RL mode:
 //   - TCP Cubic 기반 socket에서 시작
 //   - S1/S2 TCP socket을 GymTcpEnv에 등록
@@ -400,7 +394,6 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------------------------
     // Node 생성
     // 여기서는 source node 3개, router node 3개, destination node 3개를 생성합니다.
-    //
     // S0 = S1 FTP/background
     // S1 = S2 primary video-like
     // S2 = S3 burst cross traffic
@@ -432,7 +425,7 @@ int main(int argc, char *argv[])
 
 
     // -------------------------------------------------------------------------
-    // Parking-lot topology 구성 [Diagram**]
+    // Parking-lot topology 구성 [참고용 Diagram**]
     //
     // S1 ---- R1 ==== R2 ==== R3 ---- D1
     //                /  \       \
@@ -441,7 +434,6 @@ int main(int argc, char *argv[])
     // S1: FTP/background, RL-controlled
     // S2: primary video-like flow, RL-controlled and protected
     // S3: burst cross traffic, not RL-controlled
-    //
     // R2->R3는 S1/S2/S3가 함께 경쟁하는 shared bottleneck으로 구성했습니다.
     // -------------------------------------------------------------------------
 
@@ -533,9 +525,7 @@ int main(int argc, char *argv[])
 
 
     // -------------------------------------------------------------------------
-    // S2 primary video-like traffic 생성
-    // S2는 보호 대상 flow입니다. 
-    // 핵심 QoS 목표는 S2가 burst 구간에서도 5Mbps goodput과 120ms RTT constraint를 최대한 만족하도록 하는 것입니다.
+    // S2 primary video-like traffic 생성 (보호가 목적인 flow)
     // -------------------------------------------------------------------------
 
     BulkSendHelper src2(
@@ -551,8 +541,8 @@ int main(int argc, char *argv[])
 
     // -------------------------------------------------------------------------
     // S3 burst cross traffic 생성
-    // S3는 50~100초에만 유입되는 burst traffic이며 RL 제어 대상이 아닙니다.
-    // 이 flow는 S2 primary video-like flow에 혼잡을 유발하는 외부 traffic으로 사용됩니다.
+    // S3는 50~100초에만 유입되는 burst traffic이고 RL 제어 대상이 아닙니다.
+    // S2 primary video-like flow에 혼잡을 유발하는 외부 traffic으로 사용됩니다.
     // -------------------------------------------------------------------------
 
     BulkSendHelper src3(
@@ -612,7 +602,7 @@ int main(int argc, char *argv[])
 
     // -------------------------------------------------------------------------
     // Simulation 실행 및 종료 처리
-    // 여기서는 설정 정보를 출력하고, 160초까지 simulation을 실행한 뒤 로그 파일을 닫습니다.
+    // 여기서는 설정 정보를 출력하고, 160초까지 simulation을 실행한 뒤 로그 파일을 닫도록 합니다.
     // -------------------------------------------------------------------------
 
     NS_LOG_UNCOND("Mode: " << mode
