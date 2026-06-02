@@ -33,6 +33,16 @@ Simulation time    : 160 s
 Burst interval     : 50 ~ 100 s
 S2 QoS 기준        : goodput ≥ 5 Mbps, RTT ≤ 120 ms
 ```
+## Goodput 기준
+
+본 프로젝트에서 goodput은 수신 측 application이 실제로 받은 유효 데이터량을 기준으로 계산했습니다. 각 flow의 `PacketSink`에서 0.1초 동안 수신한 byte 수를 누적하고, 이를 Mbps로 변환했습니다.
+
+```text
+goodput (Mbps) = received bytes × 8 / 0.1 / 1e6
+```
+
+이처럼, TCP가 보낸 전체 전송량이 아니라 수신 application 기준 useful data rate라고 볼 수 있는 지표입니다. S2 primary video-like flow의 품질을 평가할 때, S2 goodput이 5 Mbps 이상을 만족한 비율을 주요 QoS compliance 지표로 사용했습니다.
+
 
 ## 코드 구조
 
@@ -319,7 +329,7 @@ python3 scratch/experiment_tools/analyze_parkinglot_validation.py \
 
 ## 결과 분석 스크립트
 
-그래프가 필요하지 않고, 특정 구간(burst traffic)만 분석하려면 `analyze_intervals.py`를 사용합니다.
+그래프가 필요하지 않고, 특정 구간(burst traffic)만 분석하기 위한 경우 `analyze_intervals.py`를 사용합니다.
 
 지금 실험에서 발생하는 기본 burst 구간인 50~100초를 분석하려면 다음과 같이 실행합니다.
 
@@ -354,7 +364,7 @@ scratch/results/topo3_rtt/topo3_stable_report.png
 
 최종 보고서에서는 단일 실행 결과보다 5개 seed 평균을 중심으로 결과를 정리했습니다.
 
-parking-lot single-burst 환경에서 Full RL은 S2 burst 구간의 5 Mbps 이상 goodput compliance를 TCP Cubic baseline 대비 개선했습니다.
+parking-lot single-burst 환경에서 제안된 모델(Full RL)은 S2 burst 구간의 5 Mbps 이상 goodput compliance를 TCP Cubic baseline 대비 개선했습니다.
 
 ```text
 Baseline Cubic : 18.2%
@@ -362,7 +372,7 @@ Full RL        : 32.2% ± 6.8%
 Improvement    : +14.1%p
 ```
 
-ablation 결과에서는 reward shaping만 사용한 No-Projection도 일정 수준 개선을 보였고, action projection을 추가한 Full RL에서 더 높은 개선이 나타났습니다.
+ablation 결과에서는 reward shaping만 사용한 No-Projection도 일정 수준 개선을 보였고, action projection을 추가한 Full RL에서는 더 높은 개선이 나타났습니다.
 
 ```text
 Baseline Cubic : 18.2%
@@ -379,9 +389,10 @@ Full RL        : 71.7%
 Improvement    : +26.1%p
 ```
 
-다만 이 결과는 모든 flow의 성능을 동시에 높인 결과는 아닙니다. S2 primary video-like flow를 보호하는 대신 S1 FTP/background flow의 goodput이 일부 감소하는 trade-off가 있었습니다. 따라서 이 코드는 전체 처리량을 무조건 높이는 방식이라기보다, RTT 120 ms constraint를 크게 벗어나지 않는 범위에서 S2 QoS를 우선 보호하는 service-aware control 방식으로 보는 것이 맞습니다.
+상당히 많은 개선이 이루어진 것으로 보이는 결과지만, 모든 flow의 성능을 동시에 높인 결과는 아닙니다.
+S2 primary video-like flow를 보호하는 대신 S1 FTP/background flow의 goodput이 일부 감소하는 trade-off가 있었습니다. 그렇기에 전체 처리량이 개선되었다고 보기보다, RTT 120 ms constraint를 크게 벗어나지 않는 범위에서 S2 QoS를 우선 보호하는 service-aware control 방식이라고 이해해주시면 감사하겠습니다.
 
-stress 평가에서는 S3 burst에 S4 burst가 추가로 겹치는 조건을 두었습니다. 이 경우에도 Full RL이 S2 degradation을 일부 줄였지만, 5 Mbps 기준을 안정적으로 만족시키는 수준까지는 가지 못했습니다.
+stress 평가에서는 S3 burst에 S4 burst가 추가로 겹치는 조건을 두었습니다. 이 경우에도 Full RL이 S2 degradation을 일부 줄이는데는 성공했지만, 5 Mbps 기준을 안정적으로 만족시키는 수준까지는 이르지 못했습니다.
 
 ```text
 Parking-lot stress
@@ -390,7 +401,7 @@ Full RL        : 21.2%
 Improvement    : +8.0%p
 ```
 
-즉, 강한 중첩 burst 환경에서는 현재 구조만으로 안정적인 QoS 보장을 하기는 어렵고, 이후에는 burst traffic 자체를 예측하거나 제어하는 방식까지 함께 고려해야 할 것으로 보입니다.
+이처럼, 설정한 조건보다 많고 다양한 bursty traffic이 발생하는 환경에서는 지금 제시된 구조만으로는 안정적인 QoS 보장을 하기는 어려움이 있었습니다. 이후 burst traffic 자체를 예측하거나 제어하는 방식까지 함께 고려한다면 더욱 개선이 가능할 것이라고 기대됩니다.
 
 ## Output log 형식
 
@@ -412,14 +423,11 @@ rl_cwnd_s1.txt
 rl_cwnd_s2.txt
 ```
 
-각 파일은 기본적으로 다음 형식의 text log입니다.
+각 파일은 기본적으로 시간에 따라 각 value를 기록하는 형식의 text log입니다.
 
-```text
-time value
-```
-
-분석 스크립트들은 이 로그 파일을 읽어 goodput, RTT, QoS compliance, burst 구간 성능 등을 계산합니다.
+분석 스크립트들은 각각 대응하는 로그 파일을 읽어 goodput, RTT, QoS compliance, burst 구간 성능 등을 계산합니다.
 
 ## 참고 사항
 
-이 저장소는 최종 보고서의 모든 내용을 다시 설명하기 위한 용도라기보다, 실험에 사용한 코드를 정리해두기 위한 용도입니다. 자세한 실험 배경, 결과표, 해석은 보고서에서 다루고, README에는 코드 구조와 실행 방법을 중심으로 정리했습니다.
+최종 보고서에 대응하는 모든 내용을 기록 및 정리하기보다, 실험에 사용된 코드 구조와 실행 방법을 기반으로 정리했습니다.
+실험 배경, 결과표, 해석 등은 보고서를 참고해주시면 감사하겠습니다.
