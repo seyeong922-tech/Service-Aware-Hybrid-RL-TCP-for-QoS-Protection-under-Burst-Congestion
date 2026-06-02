@@ -120,7 +120,7 @@ scratch/qos_rl_tcp/topo3_dumbbell_asym.cc
 | `topo3_parkinglot_stress.cc` | S4 burst를 추가한 stress 평가 topology              |
 | `topo3_dumbbell_asym.cc`     | dumbbell 구조를 기반으로, 노드별 delay 차이를 둔 실험용 training variant          |
 
-<img width="500" height="500" alt="Basic Topology" src="https://github.com/user-attachments/assets/75342f69-dd87-47d0-b24d-b4b2dab7c202" /> <br /> 
+<img width="900" height="585" alt="Basic Topology" src="https://github.com/user-attachments/assets/c1b31005-8735-4dee-8b2a-7d01ba723cc2" /> <br /> 
 [stress 시나리오를 제외한 여타 topology에서 개입하는 요소들은 위 다이어그램처럼 동작합니다]
 
 <img width="500" height="500" alt="stress_condition" src="https://github.com/user-attachments/assets/c6d50f82-d529-4ad8-abe9-c5845ac0f7c0" /> <br />
