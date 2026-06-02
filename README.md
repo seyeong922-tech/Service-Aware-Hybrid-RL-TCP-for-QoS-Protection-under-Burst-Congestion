@@ -389,7 +389,7 @@ Full RL        : 71.7%
 Improvement    : +26.1%p
 ```
 
-상당히 많은 개선이 이루어진 것으로 보이는 결과지만, 모든 flow의 성능을 동시에 높인 결과는 아닙니다.
+상당한 개선이 이루어진 것으로 보이지만, 모든 flow의 성능을 동시에 높인 결과는 아닙니다.
 S2 primary video-like flow를 보호하는 대신 S1 FTP/background flow의 goodput이 일부 감소하는 trade-off가 있었습니다. 그렇기에 전체 처리량이 개선되었다고 보기보다, RTT 120 ms constraint를 크게 벗어나지 않는 범위에서 S2 QoS를 우선 보호하는 service-aware control 방식이라고 이해해주시면 감사하겠습니다.
 
 stress 평가에서는 S3 burst에 S4 burst가 추가로 겹치는 조건을 두었습니다. 이 경우에도 Full RL이 S2 degradation을 일부 줄이는데는 성공했지만, 5 Mbps 기준을 안정적으로 만족시키는 수준까지는 이르지 못했습니다.
