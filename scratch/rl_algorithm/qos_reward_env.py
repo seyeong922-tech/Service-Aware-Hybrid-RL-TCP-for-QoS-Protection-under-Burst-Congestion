@@ -15,13 +15,12 @@ class QosRewardWrapper(gym.Wrapper):
         self.count = 0
         self.prev_action = None
 
-        # ns-3 topology의 GymStep 주기와 맞춰야 합니다.
-        # 현재 실험에서는 0.1초마다 observation/action interaction이 발생합니다.
+        # ns-3 topology의 GymStep 주기와 맞춘 부분으로, 현재 실험에서는 0.1초마다 observation/action interaction이 발생합니다.
         self.CONTROL_INTERVAL = 0.1
 
         # ---------------------------------------------------------------------
         # S2 primary video-like flow QoS 기준
-        # 여기서는 보호 대상인 S2 flow의 최소 goodput, 목표 goodput, deep-drop 기준, RTT constraint를 정의합니다.
+        # 보호 대상인 S2 flow의 최소 goodput, 목표 goodput, deep-drop 기준, RTT constraint를 정의했습니다.
         # ---------------------------------------------------------------------
 
         self.MIN_GP = 5.0 * 1e6        # 5 Mbps: 1080p-like minimum QoS threshold
@@ -31,15 +30,15 @@ class QosRewardWrapper(gym.Wrapper):
 
         # ---------------------------------------------------------------------
         # S1 FTP/background flow 보호 기준
-        # 여기서는 S2가 위험할 때 S1이 일부 양보하도록 유도하되, S1 FTP가 완전히 starvation되지 않도록 최소 기준을 둡니다.
+        # S2가 위험할 때 S1이 일부 양보하도록 유도하되, S1 FTP가 완전히 끊기지 않도록 최소 기준을 세워뒀습니다.
         # ---------------------------------------------------------------------
 
         self.MIN_FTP_GP = 1.0 * 1e6
         self.FTP_PROJECTION_FLOOR = 2.5 * 1e6
         self.FTP_CONCESSION_TARGET = 3.0 * 1e6
 
-        # 0.1초 단위 instant goodput은 변동성이 크기에 EWMA (Exponentially weighted average로 완화합니다.
-        # alpha=0.3은 burst 변화에는 반응하면서도 순간 spike 영향을 줄이기 위한 값입니다.
+        # 0.1초 단위의 instant goodput은 변동성이 크기에 EWMA (Exponentially weighted average)로 완화합니다.
+        # alpha=0.3은 burst 변화에는 반응하면서도 순간 spike 영향을 줄이기 위함입니다.
         self.EWMA_ALPHA = 0.3
 
         self.s1_gp_ewma = None
@@ -53,8 +52,8 @@ class QosRewardWrapper(gym.Wrapper):
 
     # -----------------------------------------------------------------------------
     # Episode 초기화
-    # 여기서는 episode 시작 시 누적 상태, EWMA goodput, 직전 상태 정보를 초기화합니다.
-    # Gym 버전 차이로 reset(**kwargs)가 실패하는 경우도 처리합니다.
+    # episode 시작 시 누적 상태, EWMA goodput, 직전 상태 정보를 초기화합니다.
+    # reset(**kwargs)가 Gym 버전 차이로 인해 실패하는 경우도 처리합니다.
     # -----------------------------------------------------------------------------
 
     def reset(self, **kwargs):
@@ -76,7 +75,7 @@ class QosRewardWrapper(gym.Wrapper):
 
     # -----------------------------------------------------------------------------
     # EWMA goodput 갱신
-    # 여기서는 현재 step에서 관측된 raw goodput을 EWMA로 smoothing합니다.
+    # 현재 step에서 관측된 raw goodput을 EWMA로 smoothing합니다.
     # reward와 projection은 raw instant goodput 대신 EWMA goodput을 기준으로 계산됩니다.
     # -----------------------------------------------------------------------------
 
@@ -89,16 +88,12 @@ class QosRewardWrapper(gym.Wrapper):
 
     # -----------------------------------------------------------------------------
     # Joint action encoding / decoding
-    # 여기서는 9개 discrete action을 S1/S2 각각의 3개 action으로 분해하거나
-    # 다시 하나의 action id로 결합합니다.
-    #
+    # 여기서는 9개 discrete action을 S1/S2 각각의 3개 action으로 분해하거나 다시 하나의 action id로 결합합니다.
     # action value:
     #   0 = decrease CWND
     #   1 = hold CWND
     #   2 = increase CWND
-    #
-    # joint action:
-    #   action_id = s1_action + 3 * s2_action
+    # joint action: action_id = s1_action + 3 * s2_action
     # -----------------------------------------------------------------------------
 
     def _decode_action(self, action_id):
@@ -112,16 +107,12 @@ class QosRewardWrapper(gym.Wrapper):
 
     # -----------------------------------------------------------------------------
     # Constraint-aware action projection
-    # 여기서는 PPO policy가 선택한 raw action을 QoS 제약에 맞게 보정합니다.
-    #
+    # PPO policy가 선택한 raw action을 QoS 제약에 맞게 보정하는 부분입니다.
     # 목적:
     # - S2 primary video-like flow가 5Mbps 미만이면 S1 FTP가 먼저 양보하도록 유도
     # - S2가 위험한 상태에서 S2 CWND를 줄이는 action 방지
     # - S2가 4.5Mbps 미만으로 깊게 떨어지면 S2 increase action 우선
-    # - 단, S1 FTP가 이미 낮으면 S1 추가 감소를 강제하지 않음
-    #
-    # 따라서 eval-only에서도 결과는 "fixed PPO policy 단독"이 아니라
-    # "fixed PPO policy + action projection"이 적용된 Hybrid RL-TCP 결과입니다.
+    # - S1 FTP가 이미 낮으면 S1 추가 감소를 강제하지 않음
     # -----------------------------------------------------------------------------
 
     def _project_action(self, raw_action_id):
@@ -179,12 +170,10 @@ class QosRewardWrapper(gym.Wrapper):
 
     # -----------------------------------------------------------------------------
     # Environment step 및 reward 계산
-    # 여기서는 PPO action을 projection한 뒤 ns-3 environment에 전달하고, 반환된 observation을 바탕으로 service-aware reward를 계산합니다.
-    #
+    # PPO action을 projection한 뒤 ns-3 environment에 전달하고, 반환된 observation을 바탕으로 service-aware reward를 계산합니다.
     # observation layout:
     #   S1: [0]cwnd [1]rtt [2]rttRatio [3]bytes [4]loss [5]serviceType
     #   S2: [6]cwnd [7]rtt [8]rttRatio [9]bytes [10]loss [11]serviceType
-    #
     # reward 설계 방향:
     # - S2 primary video-like flow의 5Mbps/120ms QoS compliance 우선
     # - S2가 안전하면 S1 FTP 활용도 허용
@@ -277,7 +266,7 @@ class QosRewardWrapper(gym.Wrapper):
         # -------------------------------------------------------------------------
         # 3. S2 RTT penalty
         # 여기서는 S2 RTT가 120ms를 초과할 때만 penalty를 부여합니다.
-        # 현재 돌려본 결과에서는 RTT를 직접 줄이는 것보다, 120ms delay constraint를 유지하는 범위 내에서 S2 goodput QoS를 개선하는 구조로 보는게 좋을 것 같습니다.
+        # 돌려본 결과에서는 RTT를 직접 줄이는 action은 일어나지 않아서 120ms delay constraint를 유지하는 범위 내에서 S2 goodput QoS를 개선하는 구조라고 볼 수 있습니다.
         # -------------------------------------------------------------------------
 
         if s2_rtt > self.MAX_RTT:
@@ -319,7 +308,7 @@ class QosRewardWrapper(gym.Wrapper):
 
         # -------------------------------------------------------------------------
         # 5. Action shaping
-        # 여기서는 현재 S2 QoS 상태에 맞지 않는 action에 penalty를 주고, S2가 unsafe할 때 S1 decrease 또는 S2 increase와 같은 유리한 방향의 action에는 보상을 부여합니다.
+        # 현재 S2 QoS 상태에 맞지 않는 action에 penalty를 주고, S2가 unsafe할 때 S1 decrease 또는 S2 increase와 같은 유리한 방향의 action에는 보상을 부여합니다.
         # -------------------------------------------------------------------------
 
         if not min_safe:
@@ -342,7 +331,7 @@ class QosRewardWrapper(gym.Wrapper):
 
         # -------------------------------------------------------------------------
         # 6. Loss penalty
-        # 여기서는 S1/S2 중 더 큰 loss count를 공통 혼잡 신호로 보고 penalty를 부여합니다. 과도한 loss count 영향은 3으로 cap을 씌워 제한합니다.
+        # S1/S2 중 더 큰 loss count를 공통 혼잡 신호로 보고 penalty를 부여합니다. 과도한 loss count 영향은 3으로 cap을 씌워 제한합니다.
         # -------------------------------------------------------------------------
 
         capped_loss = min(common_loss_count, 3.0)
