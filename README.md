@@ -1,12 +1,10 @@
 # Service-Aware-Hybrid-RL-TCP-for-QoS-Protection-under-Burst-Congestion
 
-# ns3-gym 기반 Service-Aware Hybrid RL-TCP
+이번 종합설계에서 사용한 `ns-3` / `ns3-gym` 기반 Hybrid RL-TCP 실험 코드입니다.
 
-이 저장소는 종합설계 프로젝트에서 사용한 `ns-3` / `ns3-gym` 기반 Hybrid RL-TCP 실험 코드입니다.
+프로젝트의 핵심 목표는 여러 flow가 병목 링크를 공유하는 상황에서, TCP Cubic 구조를 그대로 둔 상태에서 RL agent가 CWND를 보조적으로 조절해 `S2 primary video-like flow`의 QoS를 보호할 수 있는지 확인하는 것이었습니다.
 
-프로젝트의 목적은 여러 flow가 병목 링크를 공유하는 상황에서, TCP Cubic 구조를 그대로 두면서 RL agent가 CWND를 보조적으로 조절해 `S2 primary video-like flow`의 QoS를 보호할 수 있는지 확인하는 것이었습니다.
-
-전체 ns-3 소스코드를 포함하지는 않고, 프로젝트에서 직접 작성하거나 수정한 코드만 정리했습니다.
+전체 ns-3 소스코드가 아니라, 프로젝트를 진행하며 직접 작성하거나 수정한 코드만 정리했습니다.
 
 ## 실험 환경
 
