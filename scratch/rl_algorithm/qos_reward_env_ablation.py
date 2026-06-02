@@ -5,11 +5,8 @@ No-Projection ablation wrapper.
 
 Full RL의 reward shaping은 그대로 사용하고, action projection만 제거합니다.
 
-Full RL:
-    PPO policy + reward shaping + action projection
-
-No-Projection:
-    PPO policy + reward shaping
+Full RL: PPO policy + reward shaping + action projection
+No-Projection: PPO policy + reward shaping
 """
 
 from qos_reward_env import QosRewardWrapper
@@ -18,10 +15,8 @@ from qos_reward_env import QosRewardWrapper
 class QosRewardWrapperNoProjection(QosRewardWrapper):
     """
     Action projection을 제거한 ablation wrapper.
-
-    QosRewardWrapper의 step(), reward 계산, EWMA goodput, S1/S2 상태 갱신, action shaping reward는 그대로 상속합니다.
-
-    이 클래스에서 바꾸는 것은 _project_action() 하나입니다.
+    QosRewardWrapper의 step(), reward 계산, EWMA goodput, S1/S2 상태 갱신, action shaping reward는 그대로 받아옵니다.
+    여기서 바꾸는 건 _project_action() 만입니다.
     """
 
     def __init__(self, env):
@@ -36,9 +31,8 @@ class QosRewardWrapperNoProjection(QosRewardWrapper):
     def _project_action(self, raw_action_id):
         """
         Full RL에서는 S2 QoS 상태에 따라 PPO raw action을 보정합니다.
-
         No-Projection ablation에서는 PPO raw action을 그대로 사용합니다.
-        반환 tuple 형식은 원본 QosRewardWrapper.step()과 호환되도록 유지합니다.
+        Return되는 tuple 형식은 원본 QosRewardWrapper.step()과 호환되도록 유지합니다.
         """
 
         raw_action_id = int(raw_action_id)
