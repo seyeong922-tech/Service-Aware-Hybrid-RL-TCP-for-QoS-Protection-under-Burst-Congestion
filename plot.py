@@ -91,10 +91,7 @@ def resolve_paths(args):
 # -----------------------------------------------------------------------------
 # 시계열 로그 파일 로드
 # topology 실행 결과로 생성된 txt 파일을 읽고, steady_start 이후 데이터만 반환합니다.
-# 입력 파일 형식: time value
-# 예시로
-#   baseline_goodput_s2.txt
-#   rl_rtt_s2.txt
+# 예시: baseline_goodput_s2.txt, rl_rtt_s2.txt 등
 # 파일이 없거나 형식이 잘못된 경우 None을 반환하여 이후 require_data()에서 중단
 # -----------------------------------------------------------------------------
 
@@ -211,7 +208,6 @@ def summarize(values):
 # -----------------------------------------------------------------------------
 # S2 QoS metric 계산
 # steady 구간 전체와 burst 구간에 대해 goodput/RTT 통계와 QoS compliance를 계산합니다.
-#
 # 주요 지표:
 # - Overall S2 goodput >= 5Mbps ratio
 # - Burst S2 goodput >= 5Mbps ratio
@@ -349,7 +345,7 @@ def plot_goodput_timeseries(ax, b_gp_t, b_gp, r_gp_t, r_gp):
 # -----------------------------------------------------------------------------
 # S2 RTT CDF plot
 # Baseline Cubic과 Proposed RL의 S2 RTT 분포를 CDF로 비교합니다.
-# 120ms RTT limit을 함께 표시하여 delay constraint 만족 여부를 확인합니다.
+# 120ms RTT limit을 함께 표시해 delay constraint 만족 여부를 확인합니다.
 # -----------------------------------------------------------------------------
 
 def plot_rtt_cdf(ax, b_rtt, r_rtt):
