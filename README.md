@@ -120,9 +120,15 @@ scratch/qos_rl_tcp/topo3_dumbbell_asym.cc
 | `topo3_parkinglot_stress.cc` | S4 burst를 추가한 stress 평가 topology              |
 | `topo3_dumbbell_asym.cc`     | dumbbell 구조를 기반으로, 노드별 delay 차이를 둔 실험용 training variant          |
 
-`topo3_dumbbell_asym.cc`는 학습 topology를 다양화해보는 과정에서 시도한 코드입니다. 다만, 최종 성능 개선에는 도움이 되지 않아 main result에는 포함하지 않았습니다.
+<img width="2897" height="1885" alt="Basic Topology" src="https://github.com/user-attachments/assets/75342f69-dd87-47d0-b24d-b4b2dab7c202" />
+[stress 시나리오를 제외한 여타 topology에서 개입하는 요소들은 위 다이어그램처럼 동작합니다]
 
-각 topology에는 기본적으로 두 가지 mode가 들어있습니다.
+<img width="2695" height="2570" alt="stress_condition" src="https://github.com/user-attachments/assets/c6d50f82-d529-4ad8-abe9-c5845ac0f7c0" />
+[stress 시나리오에서는 위처럼 하나의 추가 burst traffic이 중간에 끼어들도록 설정했습니다]
+
+`topo3_dumbbell_asym.cc`는 학습 topology를 다양화해보는 과정에서 시도한 코드입니다. 다만, 최종 성능 개선에는 도움이 되지 않아 최종 결과물에는 포함하지 않았습니다.
+
+각 topology는 두 가지 mode에 대해서 돌아가게끔 설정했습니다.
 
 ```text
 Baseline : TCP Cubic만 실행
@@ -138,17 +144,25 @@ scratch/rl_algorithm/train_agent.py
 scratch/rl_algorithm/qos_reward_env.py
 ```
 
-`train_agent.py`는 PPO 기반 학습과 평가를 실행하는 코드입니다.
-`qos_reward_env.py`는 ns3-gym raw environment를 감싸서 QoS reward와 action projection을 적용합니다.
+`train_agent.py`는 Stable-Baselines3의 PPO를 이용해 학습과 저장된 model을 불러와 평가하는 코드입니다.
+`qos_reward_env.py`는 ns3-gym raw environment를 감싸서 reward 계산과 action projection을 수행합니다.
 
-이 프로젝트에서 사용한 전체 RL 구조는 아해와 같습니다.
+전체 제어 흐름은 아래 다이어그램처럼 이루어집니다.
+<img width="5394" height="2090" alt="flow_diagram" src="https://github.com/user-attachments/assets/2fa18339-c32f-434e-b4b2-4fbaeebcc5ac" />
+
+흐름을 따라가며 짚어보면,
+ns-3 simulation은 GymTcpEnv를 통해 현재 TCP 상태를 Python 쪽으로 넘겨줍니다. 
+Python agent는 이 observation을 바탕으로 action을 선택하고, reward wrapper는 선택된 action이 S2 QoS를 심하게 해치지 않도록 필요한 경우에 보정합니다.
+이후 최종 action이 다시 ns-3으로 전달되고, S1/S2의 CWND에 적용됩니다.
+
+종합적으로, 실험 전반에서 사용한 Full RL 구조는 아래와 같습니다.
 
 ```text
 PPO policy + service-aware reward shaping + action projection
 ```
 
 reward는 S2 primary video-like flow가 5 Mbps goodput 기준을 가능한 만족하도록 설계했습니다.
-다만 S2만을 무조건 보호하면 S1 FTP flow가 아예 끊길 수 있기에, S1이 최소한의 전송 성능을 유지하도록 penalty도 함께 두었습니다.
+다만, S2만을 무조건 보호하면 S1 FTP flow가 아예 끊길 수 있기에 S1이 최소한의 전송 성능을 유지하도록 penalty도 함께 두었습니다.
 
 action projection은 PPO가 선택한 action을 적용하기 전에 보정이 들어가는 부분입니다. 예를 들어, S2 goodput이 5 Mbps 아래로 떨어진 상황에서는 S1이 계속 CWND를 늘리는 action을 제한하거나, S2의 CWND 감소 action을 막는 식으로 동작합니다.
 
@@ -362,9 +376,12 @@ scratch/results/topo3_rtt/topo3_stable_report.png
 
 ## 결과 요약
 
-최종 보고서에서는 단일 실행 결과보다 5개 seed 평균을 중심으로 결과를 정리했습니다.
+Parking-lot, single-burst 환경에서 S2 flow의 goodput, RTT, QoS compliance를 비교해본 결과 다음과 같은 출력 그래프를 확인할 수 있었습니다.
+<img width="4800" height="3000" alt="parkinglot" src="https://github.com/user-attachments/assets/75b4d9fa-ec92-413a-b582-f8976fa81ff5" />
 
-parking-lot single-burst 환경에서 제안된 모델(Full RL)은 S2 burst 구간의 5 Mbps 이상 goodput compliance를 TCP Cubic baseline 대비 개선했습니다.
+최종 보고서에서는 단일 실행 결과에서 더 나아가서 5개 seed 평균을 중심으로 아래처럼 결과를 정리했습니다.
+
+위와 동일한 환경에서 제안된 모델(Full RL)은 S2 burst 구간의 5 Mbps 이상 goodput compliance를 TCP Cubic baseline 대비 개선했습니다.
 
 ```text
 Baseline Cubic : 18.2%
