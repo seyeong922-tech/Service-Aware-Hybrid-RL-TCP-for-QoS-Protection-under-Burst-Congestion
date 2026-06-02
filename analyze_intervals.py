@@ -7,15 +7,10 @@ import numpy as np
 # -----------------------------------------------------------------------------
 # 기본 경로 및 분석 구간 정의
 # 결과 파일을 읽을 기본 경로와 주요 scenario interval을 정의합니다.
-#
 # startup: TCP 연결 초기화 및 slow start 영향이 포함되는 warm-up 구간
-#
 # pre: burst traffic 유입 전 정상 구간
-#
 # burst: S3 burst traffic이 유입되는 핵심 QoS 평가 구간
-#
 # post: burst 종료 이후 회복 구간
-#
 # steady: startup을 제외한 전체 steady-state 구간
 # -----------------------------------------------------------------------------
 
@@ -36,11 +31,9 @@ DEFAULT_SCENARIO = "burst"
 # -----------------------------------------------------------------------------
 # 실행 인자 정의
 # 분석할 결과 디렉토리와 분석 구간을 command-line option으로 받습니다.
-#
-# ex)
+# 예시로,
 #   python3 scratch/analyze_intervals.py --data-dir scratch/results/topo3_rtt
 #   python3 scratch/analyze_intervals.py --data-dir scratch/results/parkinglot_stress_rtt --start 50 --end 70
-#
 # --start와 --end를 지정하면 --scenario의 기본 구간보다 우선 적용됩니다.
 # -----------------------------------------------------------------------------
 
