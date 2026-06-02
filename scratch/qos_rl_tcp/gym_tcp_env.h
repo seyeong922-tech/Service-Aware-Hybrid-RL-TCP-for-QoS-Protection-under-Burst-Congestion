@@ -13,7 +13,7 @@ using namespace ns3;
 // -----------------------------------------------------------------------------
 // Service type 정의
 // flow의 서비스 성격을 구분지어둡니다. 
-// reward wrapper와 결과 해석에서는 S1을 FTP/background, S2를 video-like flow로 다루기에 serviceType 값을 고정해서 사용합니다.
+// reward wrapper와 결과 해석에서는 S1을 FTP/background, S2를 video-like flow로 다루기에 serviceType 값을 고정해 사용합니다.
 // -----------------------------------------------------------------------------
 
 enum ServiceType
@@ -47,15 +47,12 @@ struct TcpAgentData
 // -----------------------------------------------------------------------------
 // GymTcpEnv 클래스 선언
 // 여기서는 ns-3 TCP 상태를 ns3-gym observation/action interface로 연결합니다.
-//
 // 역할:
 // - topology 파일에서 등록한 S1/S2 TCP socket을 RL agent로 관리
 // - cwnd, RTT, RTT ratio, bytes, loss, serviceType을 observation으로 구성
 // - Python PPO agent가 선택한 discrete action을 TCP CWND 조정으로 적용
 // - ReportRx(), ReportQueueDrop()을 통해 goodput/loss 관련 상태 갱신
-//
-// 실제 reward shaping과 action projection은 Python의 qos_reward_env.py에서 수행되고,
-// 이 클래스는 ns-3 쪽 observation/action bridge 역할을 담당합니다.
+// 실제 reward shaping과 action projection은 Python의 qos_reward_env.py에서 수행되고, 이 클래스는 ns-3 쪽 observation/action 징검다리 역할을 담당합니다.
 // -----------------------------------------------------------------------------
 
 class GymTcpEnv : public OpenGymEnv
@@ -119,7 +116,6 @@ private:
     // -------------------------------------------------------------------------
     // Observation 구성
     // 특정 flow의 상태를 OpenGymBoxContainer에 추가합니다.
-    //
     // flow별 observation layout:
     //   [0] cwnd
     //   [1] rtt
@@ -127,7 +123,6 @@ private:
     //   [3] bytesReceived
     //   [4] segmentLossCount
     //   [5] serviceType
-    //
     // S1과 S2가 순서대로 들어가므로 Python wrapper에서는 총 12차원으로 읽습니다.
     // -------------------------------------------------------------------------
 
@@ -140,12 +135,10 @@ private:
     // -------------------------------------------------------------------------
     // Action 적용
     // Python PPO agent가 선택한 action을 특정 flow의 CWND 조정으로 적용합니다.
-    //
     // agentAction 의미:
     //   0 = decrease CWND
     //   1 = hold CWND
     //   2 = increase CWND
-    //
     // action projection은 Python wrapper에서 먼저 수행되며, 이 함수는 projection 이후의 최종 action을 socket에 반영합니다.
     // -------------------------------------------------------------------------
 
