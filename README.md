@@ -62,7 +62,7 @@ scratch/
     └── analyze_parkinglot_validation.py
 ```
 
-## 주요 파일 설명
+## 파일 설명
 
 ### 1. ns3-gym 환경 인터페이스
 
@@ -73,7 +73,7 @@ scratch/qos_rl_tcp/gym_tcp_env.cc
 
 `gym_tcp_env`는 ns-3의 TCP socket 상태를 Python RL agent와 연결하는 역할을 합니다.
 
-현재 실험에서는 S1과 S2만 RL 제어 대상으로 등록합니다.
+현재 실험에서는 S1과 S2만 RL 제어 대상으로 보기에 이 둘을 등록합니다.
 
 ```text
 S1: FTP/background flow
@@ -87,8 +87,8 @@ agent가 받는 observation은 S1과 S2 각각에 대해 다음 정보를 포함
 cwnd, RTT, RTT ratio, received bytes, loss signal, service type
 ```
 
-S1과 S2가 각각 6개 feature를 가지므로 전체 observation은 12차원입니다.
-action은 S1/S2 각각에 대해 CWND 감소, 유지, 증가 중 하나를 선택하는 방식이며, 두 flow의 action을 합쳐 총 9개의 discrete action으로 구성했습니다.
+S1과 S2가 각각 6개 feature를 가지기에 전체 observation은 12차원입니다.
+action은 S1/S2 각각에 대해 CWND [감소, 유지, 증가] 중 하나를 선택하는 방식이며, 두 flow의 action을 합쳐 총 9개의 경우가 발생할 수 있도록 구성했습니다.
 
 ### 2. ns-3 topology 코드
 
@@ -105,21 +105,21 @@ scratch/qos_rl_tcp/topo3_dumbbell_asym.cc
 | 파일                           | 역할                                            |
 | ---------------------------- | --------------------------------------------- |
 | `topo3_parkinglot.cc`        | main parking-lot 실험 topology                  |
-| `topo3_dumbbell.cc`          | 단순 shared bottleneck 형태의 추가 training topology |
+| `topo3_dumbbell.cc`          | shared bottleneck 형태의 추가 training topology |
 | `topo3_star_gateway.cc`      | 학습에 포함하지 않은 unseen evaluation topology        |
 | `topo3_parkinglot_stress.cc` | S4 burst를 추가한 stress 평가 topology              |
-| `topo3_dumbbell_asym.cc`     | 노드별 delay 차이를 둔 실험용 training variant          |
+| `topo3_dumbbell_asym.cc`     | dumbbell 구조를 기반으로, 노드별 delay 차이를 둔 실험용 training variant          |
 
-`topo3_dumbbell_asym.cc`는 학습 topology를 다양화해보는 과정에서 시도한 코드입니다. 최종 성능 개선에는 도움이 되지 않아 main result에는 포함하지 않았습니다.
+`topo3_dumbbell_asym.cc`는 학습 topology를 다양화해보는 과정에서 시도한 코드입니다. 다만, 최종 성능 개선에는 도움이 되지 않아 main result에는 포함하지 않았습니다.
 
-각 topology는 기본적으로 두 가지 mode를 지원합니다.
+각 topology에는 기본적으로 두 가지 mode가 들어있습니다.
 
 ```text
 Baseline : TCP Cubic만 실행
 RL       : ns3-gym을 통해 Python PPO agent와 연결
 ```
 
-실험이 끝나면 goodput, RTT, CWND 로그가 `scratch/results/` 아래에 저장됩니다.
+실험이 끝나면 goodput, RTT, CWND 로그가 `scratch/results/` 하위 폴더에 저장됩니다.
 
 ### 3. RL agent 및 reward wrapper
 
@@ -131,16 +131,16 @@ scratch/rl_algorithm/qos_reward_env.py
 `train_agent.py`는 PPO 기반 학습과 평가를 실행하는 코드입니다.
 `qos_reward_env.py`는 ns3-gym raw environment를 감싸서 QoS reward와 action projection을 적용합니다.
 
-이 프로젝트에서 사용한 전체 RL 구조는 다음과 같습니다.
+이 프로젝트에서 사용한 전체 RL 구조는 아해와 같습니다.
 
 ```text
 PPO policy + service-aware reward shaping + action projection
 ```
 
-reward는 S2 primary video-like flow가 5 Mbps goodput 기준을 최대한 만족하도록 설계했습니다.
-다만 S2만 무조건 보호하면 S1 FTP flow가 완전히 굶을 수 있으므로, S1이 최소한의 전송 성능을 유지하도록 penalty도 함께 두었습니다.
+reward는 S2 primary video-like flow가 5 Mbps goodput 기준을 가능한 만족하도록 설계했습니다.
+다만 S2만을 무조건 보호하면 S1 FTP flow가 아예 끊길 수 있기에, S1이 최소한의 전송 성능을 유지하도록 penalty도 함께 두었습니다.
 
-action projection은 PPO가 선택한 action을 그대로 적용하기 전에 한 번 보정하는 부분입니다. 예를 들어 S2 goodput이 5 Mbps 아래로 떨어진 상황에서는 S1이 계속 CWND를 늘리는 action을 제한하거나, S2의 CWND 감소 action을 막는 식으로 동작합니다.
+action projection은 PPO가 선택한 action을 적용하기 전에 보정이 들어가는 부분입니다. 예를 들어, S2 goodput이 5 Mbps 아래로 떨어진 상황에서는 S1이 계속 CWND를 늘리는 action을 제한하거나, S2의 CWND 감소 action을 막는 식으로 동작합니다.
 
 ### 4. Ablation 코드
 
@@ -149,7 +149,7 @@ scratch/rl_algorithm/train_agent_ablation.py
 scratch/rl_algorithm/qos_reward_env_ablation.py
 ```
 
-ablation에서는 reward shaping은 그대로 두고 action projection만 제거했습니다.
+ablation에서는 reward shaping은 그대로 두고 action projection을 제거해봤습니다.
 
 비교 구조는 다음과 같습니다.
 
@@ -158,7 +158,7 @@ Full RL       : PPO policy + reward shaping + action projection
 No-Projection : PPO policy + reward shaping
 ```
 
-이를 통해 성능 개선이 단순히 reward에서만 나온 것인지, action projection도 실제로 도움이 되었는지 나누어 확인했습니다.
+이런 비교를 통해 성능 개선이 reward에서만 비롯된 것인지, action projection도 실제로 도움이 되었는지 나눠 확인했습니다.
 
 ### 5. Validation 및 분석 코드
 
@@ -169,25 +169,25 @@ scratch/analyze_intervals.py
 scratch/plot.py
 ```
 
-`run_parkinglot_validation.py`는 parking-lot single-burst 환경에서 Baseline, Full RL, No-Projection ablation을 seed별로 반복 실행하는 코드입니다.
+`run_parkinglot_validation.py`는 기본 토폴로지+시나리오인 parking-lot single-burst 환경에서 Baseline, Full RL, No-Projection ablation을 seed별로 반복 실행하는 코드입니다.
 
 `analyze_parkinglot_validation.py`는 위 실험 결과를 모아 multi-seed 평균과 ablation 결과를 출력합니다.
 
-`analyze_intervals.py`는 특정 시간 구간만 잘라서 goodput, RTT, QoS ratio 등을 계산합니다.
+`analyze_intervals.py`는 특정 시간 구간만 잘라서 goodput, RTT, QoS ratio 등을 계산하고 터미널에 출력하는 용도입니다.
 
 `plot.py`는 S2 goodput time-series, S2 RTT CDF, QoS compliance bar plot을 생성합니다.
 
-## 파일 배치 방법
+## 파일 배치
 
-이 저장소는 ns-3.38 최상위 폴더에 맞춰 배치하는 것을 기준으로 작성했습니다.
+ns-3.38 최상위 폴더에 맞춰 배치하는 것을 전제로 파일들을 구성했습니다. 
 
-예를 들어 ns-3 경로가 아래와 같다면,
+ns-3 경로가 아래와 같다면,
 
 ```text
 ~/ns-allinone-3.38/ns-3.38/
 ```
 
-저장소의 `scratch/` 폴더를 ns-3.38 내부에 복사하면 됩니다.
+해당 repository의 `scratch/` 폴더를 ns-3.38 내부에 위치시키면 됩니다.
 
 최종적으로는 아래와 같은 구조가 됩니다.
 
@@ -202,7 +202,7 @@ ns-3.38/
 │   └── plot.py
 ```
 
-이후 ns-3 최상위 폴더에서 빌드합니다.
+이후 ns-3 최상위 폴더에서 빌드합니다. (터미널 활용)
 
 ```bash
 ./ns3 build
@@ -212,13 +212,13 @@ ns-3.38/
 
 ### Baseline 실행
 
-parking-lot topology에서 TCP Cubic baseline을 실행하는 예시는 다음과 같습니다.
+주축이 되는 parking-lot topology에서 TCP Cubic baseline을 실행하려면 다음과 같이 터미널에 입력하면 됩니다.
 
 ```bash
 ./ns3 run "scratch/qos_rl_tcp/topo3_parkinglot --mode=Baseline"
 ```
 
-결과는 기본적으로 아래 경로에 저장됩니다.
+별도의 명시가 없으면 결과는 아래 경로에 저장됩니다.
 
 ```text
 scratch/results/topo3_rtt/
@@ -234,13 +234,13 @@ RL mode는 ns-3 simulation과 Python agent를 서로 다른 터미널에서 실�
 ./ns3 run "scratch/qos_rl_tcp/topo3_parkinglot --mode=RL"
 ```
 
-그 다음 Terminal 2에서 PPO agent를 실행합니다.
+이후, Terminal 2에서 PPO agent를 실행합니다.
 
 ```bash
 python3 scratch/rl_algorithm/train_agent.py --seed=1 --timesteps=1536
 ```
 
-기본 model 저장 경로는 다음과 같습니다.
+기본 model 저장 경로는 아래와 같습니다.
 
 ```text
 scratch/rl_algorithm/qos_tcp_stable_model.zip
@@ -248,7 +248,7 @@ scratch/rl_algorithm/qos_tcp_stable_model.zip
 
 ### 이어서 학습하기
 
-기존 model을 불러와서 이어서 학습할 수 있습니다.
+기존 model을 불러와서 이어서 학습시킬 수 있습니다. 
 
 ```bash
 python3 scratch/rl_algorithm/train_agent.py \
@@ -259,11 +259,11 @@ python3 scratch/rl_algorithm/train_agent.py \
   --timesteps=1536
 ```
 
-multi-topology sequential training을 할 때는 parking-lot에서 학습한 model을 저장하고, 이후 dumbbell topology에서 같은 model을 이어서 학습하는 방식으로 사용했습니다.
+multi-topology sequential training 시에는 parking-lot에서 학습한 model을 저장하고, 이후 dumbbell topology에서 같은 model을 이어서 학습하는 방식으로 사용했습니다.
 
 ### Eval-only 실행
 
-학습된 model을 고정한 상태로 평가만 수행할 수도 있습니다.
+학습된 model을 고정한 상태로 평가만 수행하는 방법입니다. (Unseen topology 검증에 활용)
 
 ```bash
 python3 scratch/rl_algorithm/train_agent.py \
@@ -274,11 +274,11 @@ python3 scratch/rl_algorithm/train_agent.py \
 ```
 
 eval-only에서는 PPO model이 업데이트되지 않습니다.
-다만 `qos_reward_env.py`의 action projection은 그대로 적용되므로, 결과는 fixed PPO policy와 action projection이 함께 적용된 Hybrid RL-TCP 결과입니다.
+다만 `qos_reward_env.py`의 action projection은 그대로 적용되기에, 최종 결과는 fixed PPO policy와 action projection이 함께 적용된 Hybrid RL-TCP 결과입니다.
 
 ### No-Projection ablation 실행
 
-No-Projection ablation도 ns-3 simulation을 먼저 실행한 뒤 Python agent를 연결합니다.
+No-Projection ablation도 ns-3 simulation을 먼저 실행한 뒤 Python agent를 연결합니다. (Projection 유무에 따른 성능 비교에 활용)
 
 Terminal 1:
 
@@ -296,7 +296,7 @@ python3 scratch/rl_algorithm/train_agent_ablation.py \
 
 ## Parking-lot validation 실행
 
-parking-lot single-burst 환경에서 Baseline, Full RL, No-Projection을 seed별로 반복 실행하려면 다음 스크립트를 사용합니다.
+main으로 보고 있는 parking-lot single-burst 환경에서 Baseline, Full RL, No-Projection을 seed별로 반복 실행하기 위해서는 아래와 같은 스크립트를 터미널에 입력하면 됩니다.
 
 ```bash
 python3 scratch/experiment_tools/run_parkinglot_validation.py --task both --n-seeds 5
@@ -308,7 +308,7 @@ python3 scratch/experiment_tools/run_parkinglot_validation.py --task both --n-se
 scratch/results/parkinglot_validation/
 ```
 
-분석은 다음과 같이 실행합니다.
+분석은 다음과 같은 코드를 통해 실행시킬 수 있습니다.
 
 ```bash
 python3 scratch/experiment_tools/analyze_parkinglot_validation.py \
@@ -319,9 +319,9 @@ python3 scratch/experiment_tools/analyze_parkinglot_validation.py \
 
 ## 결과 분석 스크립트
 
-특정 구간만 분석하려면 `analyze_intervals.py`를 사용합니다.
+그래프가 필요하지 않고, 특정 구간(burst traffic)만 분석하려면 `analyze_intervals.py`를 사용합니다.
 
-예를 들어 기본 burst 구간인 50~100초를 분석하려면 다음과 같이 실행합니다.
+지금 실험에서 발생하는 기본 burst 구간인 50~100초를 분석하려면 다음과 같이 실행합니다.
 
 ```bash
 python3 scratch/analyze_intervals.py \
@@ -329,7 +329,7 @@ python3 scratch/analyze_intervals.py \
   --scenario burst
 ```
 
-직접 구간을 지정할 수도 있습니다.
+필요하다면 직접 구간을 지정할 수도 있습니다.
 
 ```bash
 python3 scratch/analyze_intervals.py \
@@ -338,7 +338,7 @@ python3 scratch/analyze_intervals.py \
   --end 100
 ```
 
-그래프는 다음 명령어로 생성합니다.
+그래프는 아래와 같은 명령어로 생성합니다.
 
 ```bash
 python3 scratch/plot.py --data-dir scratch/results/topo3_rtt
