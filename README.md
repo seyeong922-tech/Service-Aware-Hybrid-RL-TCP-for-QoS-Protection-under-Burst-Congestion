@@ -126,8 +126,7 @@ scratch/qos_rl_tcp/topo3_dumbbell_asym.cc
 <img width="600" height="572" alt="stress_condition" src="https://github.com/user-attachments/assets/202e4eac-baa1-409e-a2bc-0197783a0455" /> <br />
 [stress 시나리오에서는 위처럼 하나의 추가 burst traffic이 중간에 끼어들도록 설정했습니다]
 
-`topo3_dumbbell_asym.cc`는 학습 topology를 다양화해보는 과정에서 시도한 코드입니다. <br />
-다만, 최종 성능 개선에는 도움이 되지 않아 최종 결과물에는 포함하지 않았습니다.
+`topo3_dumbbell_asym.cc`는 학습 topology를 다양화해보는 과정에서 시도한 코드입니다. 다만, 최종 성능 개선에는 도움이 되지 않아 최종 결과물에는 포함하지 않았습니다.
 
 각 topology는 두 가지 mode에 대해서 돌아가게끔 설정했습니다.
 
@@ -377,7 +376,7 @@ scratch/results/topo3_rtt/topo3_stable_report.png
 
 ## 결과 요약
 
-Parking-lot, single-burst 환경에서 S2 flow의 goodput, RTT, QoS compliance를 비교해본 결과 다음과 같은 출력 그래프를 확인할 수 있었습니다. <br />
+Parking-lot, single-burst 환경에서 S2 flow의 goodput, RTT, QoS compliance를 비교해본 결과 다음과 같은 출력 그래프를 확인할 수 있었습니다. <br /> <br />
 <img width="4800" height="3000" alt="parkinglot" src="https://github.com/user-attachments/assets/75b4d9fa-ec92-413a-b582-f8976fa81ff5" />
 
 최종 보고서에서는 단일 실행 결과에서 더 나아가서 5개 seed 평균을 중심으로 아래처럼 결과를 정리했습니다.
