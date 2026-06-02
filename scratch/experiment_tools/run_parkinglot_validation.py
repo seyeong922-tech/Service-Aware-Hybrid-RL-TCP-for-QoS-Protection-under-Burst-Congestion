@@ -3,17 +3,13 @@
 """
 run_parkinglot_validation.py
 
-parking-lot single-burst scenario에서 다음 검증 실험을 실행합니다.
-
+parking-lot single-burst scenario에서 아래 항목들에 대해 검증해보는 코드입니다.
 1. Baseline Cubic
 2. Full RL multi-seed
 3. No-Projection ablation multi-seed
 
-사용 위치:
-    ns-3.38 최상위 폴더에서 실행
-
-터미널에서는 이렇게 실행:
-    python3 scratch/experiment_tools/run_parkinglot_validation.py --task both --n-seeds 5
+ns-3.38 최상위 폴더에서 
+python3 scratch/experiment_tools/run_parkinglot_validation.py --task both --n-seeds 5 으로 실행
 
 결과:
     scratch/results/parkinglot_validation/
@@ -140,7 +136,7 @@ def parse_args():
 
 # -----------------------------------------------------------------------------
 # 실행 환경 검증
-# ns-3 최상위 폴더에서 실행 중인지와 필요한 Python script 존재 여부를 확인합니다.
+# ns-3 최상위 폴더에서 실행 중인지와 필요한 Python script가 존재하는지 확인합니다.
 # -----------------------------------------------------------------------------
 
 def validate_environment(args):
